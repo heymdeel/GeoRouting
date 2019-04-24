@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>FindMe</name>
+    </assembly>
+    <members>
+        <member name="M:FindMe.Controllers.AuthController.SignUpAsync(FindMe.AppLayer.DTO.SignUpInput)">
+            <summary> Sign up user </summary>
+            <response code="200"> нихуя, т.к. юзер потом должен логиниться сам </response>
+            <response code="400"> errors in model validation(101) or user already exists(100) </response>
+        </member>
+        <member name="M:FindMe.Controllers.AuthController.SignInUser(FindMe.AppLayer.DTO.SignInInput)">
+            <summary> Sign in user </summary>
+            <response code="200"> token and user's roles </response>
+            <response code="400"> errors in model validation(101) or user was not found(102) </response>
+        </member>
+        <member name="M:FindMe.Controllers.RoutingController.CalculateRoute(FindMe.AppLayer.DTO.RouteInput)">
+            <summary> Calculate route from one point to another </summary>
+            <response code="200"> route and attributes </response>
+            <response code="400"> errors in model validation(101) </response>
+            <response code="401"> unauthorized </response>
+        </member>
+    </members>
+</doc>

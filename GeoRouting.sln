@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeoRouting", "GeoRouting\GeoRouting.csproj", "{FE5BB90F-3C64-4709-A8C2-808B7456F289}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GeoRouting.AppLayer", "GeoRouting.AppLayer\GeoRouting.AppLayer.csproj", "{F17DD4C8-14F6-4549-B54B-5AAFEC4DC9FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE5BB90F-3C64-4709-A8C2-808B7456F289}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE5BB90F-3C64-4709-A8C2-808B7456F289}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE5BB90F-3C64-4709-A8C2-808B7456F289}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE5BB90F-3C64-4709-A8C2-808B7456F289}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F17DD4C8-14F6-4549-B54B-5AAFEC4DC9FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F17DD4C8-14F6-4549-B54B-5AAFEC4DC9FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F17DD4C8-14F6-4549-B54B-5AAFEC4DC9FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F17DD4C8-14F6-4549-B54B-5AAFEC4DC9FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {24E752BD-D605-4EDC-AA67-2014A7899175}
+	EndGlobalSection
+EndGlobal
