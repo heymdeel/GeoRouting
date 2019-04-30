@@ -15,9 +15,6 @@ namespace GeoRouting.AppLayer.Model.Entities
         [Column(@"roles"), NotNull] public string[] Roles { get; set; } // ARRAY
 
         [Association(ThisKey = "Id", OtherKey = "IdUser", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
-        public IEnumerable<AttributeRates> AttributeRates { get; set; }
-
-        [Association(ThisKey = "Id", OtherKey = "IdUser", CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
         public IEnumerable<Attribute> Attributes { get; set; }
     }
 }

@@ -15,8 +15,6 @@ namespace GeoRouting.AppLayer.Services
     {
         public async Task<WayAttributesDTO> GetWaysAttributes(int wayId)
         {
-            var wayAttributes = new WayAttributesDTO();
-
             using (var db = new DbContext())
             {
                 var way = await db.Ways.FirstOrDefaultAsync(w => w.Id == wayId);
@@ -38,18 +36,40 @@ namespace GeoRouting.AppLayer.Services
                                                                                 inner join attributes on id_attribute = attributes.id where is_point = true) as t2
                                                                                 inner join point_attributes on t2.id = point_attributes.id", parameters);
 
-                var longAttributes = await db.QueryToListAsync<LongAttrbiuteDTO>(@"select t2.id, t2.user as UserId, commentary, category, st_x(source) as SourceLongitude, st_y(source) as SourceLatitude, st_x(target) as TargetLongitude, st_y(target) as TargetLatitude from 
-                                                                                (select attributes.id, attributes.user, commentary, category from
-                                                                                (select id_attribute from ways_attributes
-                                                                                 where id_way = @way_id) as t1
-                                                                                inner join attributes on id_attribute = attributes.id where is_point = false) as t2
-                                                                                inner join long_attributes on t2.id = long_attributes.id", parameters);
+                var longAttributes = await db.WaysAttributes
+                                             .LoadWith(wa => wa.Attribute)
+                                             .Where(wa => wa.WayId == wayId)
+                                             .Select(wa => new LongAttrbiuteDTO
+                                             {
+                                                 Id = wa.Attribute.Id,
+                                                 UserId = wa.Attribute.UserId,
+                                                 Commentary = wa.Attribute.Commentary,
+                                                 Category = wa.Attribute.CategoryId
+                                             })
+                                             .ToListAsync();
 
-                wayAttributes.PointAttributes = pointAttributes;
-                wayAttributes.LongAttributes = longAttributes;
+                foreach (var attr in longAttributes)
+                {
+                    attr.Points = await db.WaysAttributes
+                                    .LoadWith(wa => wa.Way)
+                                    .Where(wa => wa.AttributeId == attr.Id)
+                                    .Select(wa => new LongEdgeDTO
+                                    {
+                                        SourceLongitude = wa.Way.X1.Value,
+                                        SourceLatitude = wa.Way.Y1.Value,
+                                        TargetLongitude = wa.Way.X2.Value,
+                                        TargetLatitude = wa.Way.Y2.Value,
+                                        Length = wa.Way.LengthM.Value
+                                    })
+                                    .ToListAsync();
+                }
+
+                return new WayAttributesDTO
+                {
+                    PointAttributes = pointAttributes,
+                    LongAttributes = longAttributes
+                };
             }
-
-            return wayAttributes;
         }
     }
 }

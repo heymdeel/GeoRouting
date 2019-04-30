@@ -11,5 +11,8 @@ namespace GeoRouting.AppLayer.Services
     {
         Task<IEnumerable<Category>> GetCategories();
         Task<Model.Entities.Attribute> AddPointAttribute(int userId, PointAttributeInput attributeInput);
+        Task<Model.Entities.Attribute> AddLongAttribute(int userId, LongAttributeInput attributeInput);
+        Task<WayAttributesDTO> GetUserAttributes(int userId);
+        Task RemoveAttribute(int attributeId, int userId);
     }
 }

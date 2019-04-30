@@ -50,6 +50,7 @@ namespace GeoRouting.AppLayer.Model
         public ITable<Way> Ways { get => GetTable<Way>(); }
         public ITable<Category> Categories { get => GetTable<Category>(); }
         public ITable<Entities.Attribute> Attributes { get => GetTable<Entities.Attribute>(); }
+        public ITable<PointAttribute> PointAttributes { get => GetTable<PointAttribute>(); }
 
         static DbContext()
         {
