@@ -38,6 +38,6 @@ namespace GeoRouting.AppLayer.DTO
         public int Category { get; set; }
 
         [JsonProperty("edges")]
-        public IEnumerable<LongEdgeDTO> Points { get; set; }
+        public IEnumerable<LongEdgeDTO> Edges { get; set; }
     }
 }

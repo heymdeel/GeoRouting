@@ -8,7 +8,6 @@ using GeoRouting.AppLayer.Exceptions;
 using GeoRouting.AppLayer.Services;
 using GeoRouting.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -95,6 +94,60 @@ namespace GeoRouting.Controllers
             var attributeVM = mapper.Map<CreatedAttributeVM>(attribute);
 
             return Created($"/api/long_attributes/{attribute.Id}", attributeVM);
+        }
+
+        // PUT: api/point_attributes/point/{id}
+        /// <summary> Update point attribute </summary>
+        /// <response code="200"> attribute was updated </response>
+        /// <response code="400"> bad model validation(101), user doesn't exist(102), attribute was not found(105) </response>
+        /// <response code="401"> unauthorized </response>
+        /// <response code="403"> Access denied(104): user didn't add that attribute </response>
+        [HttpPut("point_attributes/{id:int}")]
+        [Authorize(Roles = "client")]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        [ProducesResponseType(typeof(ErrorResponse), 403)]
+        public async Task<IActionResult> UpdatePointAttribute([FromBody] PointAttributeInput attributeInput, [FromRoute] int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                string errors = JsonConvert.SerializeObject(ModelState.Values
+                                .SelectMany(state => state.Errors)
+                                .Select(error => error.ErrorMessage));
+
+                throw new BadInputException(101, errors);
+            }
+
+            int userId = User.GetUserId();
+            await attributeService.UpdatePointAttribute(id, userId, attributeInput);
+
+            return Ok();
+        }
+
+        // PUT: api/long_attributes/point/{id}
+        /// <summary> Update long attribute </summary>
+        /// <response code="200"> attribute was updated </response>
+        /// <response code="400"> bad model validation(101), user doesn't exist(102), attribute was not found(105) </response>
+        /// <response code="401"> unauthorized </response>
+        /// <response code="403"> Access denied(104): user didn't add that attribute </response>
+        [HttpPut("long_attributes/{id:int}")]
+        [Authorize(Roles = "client")]
+        [ProducesResponseType(typeof(ErrorResponse), 400)]
+        [ProducesResponseType(typeof(ErrorResponse), 403)]
+        public async Task<IActionResult> UpdateLongtAttribute([FromBody] LongAttributeInput attributeInput, [FromRoute] int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                string errors = JsonConvert.SerializeObject(ModelState.Values
+                                .SelectMany(state => state.Errors)
+                                .Select(error => error.ErrorMessage));
+
+                throw new BadInputException(101, errors);
+            }
+
+            int userId = User.GetUserId();
+            await attributeService.UpdateLongAttribute(id, userId, attributeInput);
+
+            return Ok();
         }
 
         // GET: api/attributes/my

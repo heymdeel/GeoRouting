@@ -28,7 +28,7 @@ namespace GeoRouting.Controllers
 
         // POST: api/sing_up
         /// <summary> Sign up user </summary>
-        /// <response code="200"> нихуя, т.к. юзер потом должен логиниться сам </response>
+        /// <response code="200"> successfull sign up </response>
         /// <response code="400"> errors in model validation(101) or user already exists(100) </response>
         [HttpPost("sign_up")]
         [ProducesResponseType(typeof(void), 200)]

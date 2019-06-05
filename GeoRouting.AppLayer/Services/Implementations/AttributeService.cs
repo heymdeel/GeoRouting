@@ -164,6 +164,199 @@ namespace GeoRouting.AppLayer.Services
             }
         }
 
+        public async Task UpdatePointAttribute(int attributeId, int userId, PointAttributeInput attributeInput)
+        {
+            using (var db = new DbContext())
+            {
+                var attribute = await db.Attributes
+                        .LoadWith(a => a.Category)
+                        .FirstOrDefaultAsync(a => a.Id == attributeId);
+
+                if (await db.Categories.FirstOrDefaultAsync(c => c.Id == attributeInput.CategoryId && c.IsPoint) == null)
+                {
+                    throw new BadInputException(101, "wrong category");
+                }
+
+                if (await db.Users.FirstOrDefaultAsync(u => u.Id == userId) == null)
+                {
+                    throw new BadInputException(102, "user with such id was not found");
+                }
+
+                if (attribute == null)
+                {
+                    throw new BadInputException(105, "attribute was not found");
+                }
+
+                if (attribute.UserId != userId)
+                {
+                    throw new AccessRefusedException(104, "access denied");
+                }
+
+
+                var parameters = new
+                {
+                    coefficient = new DataParameter { Value = attribute.Category.Coefficient },
+                    id_attribute = new DataParameter { Value = attributeId }
+                };
+
+                await db.ExecuteAsync(@"update ways set cost = cost / (1 - coverage + coeff * coverage),
+                                                        reverse_cost = reverse_cost / (1 - coverage + coeff * coverage),
+				                                        maxspeed_forward = maxspeed_forward * (1 - coverage + coeff * coverage),
+                                                        maxspeed_backward = maxspeed_backward * (1 - coverage + coeff * coverage)
+                                        from (select id_way, coverage, @coefficient as coeff 
+		                                      from (select id_way, coverage from ways_attributes where id_attribute = @id_attribute) as t1) as t2
+                                        where ways.id = t2.id_way", parameters);
+
+                await db.WaysAttributes.Where(w => w.AttributeId == attributeId).DeleteAsync();
+
+                // inserting attribute into database
+                attribute.Commentary = attributeInput.Commentary;
+                attribute.CategoryId = attributeInput.CategoryId;
+
+                await db.UpdateAsync(attribute);
+
+                var pointAttribute = new PointAttribute()
+                {
+                    Id = attributeId,
+                    Location = new Point(attributeInput.Location.Longitude, attributeInput.Location.Latitude)
+                    {
+                        SRID = 4326
+                    },
+                    Radius = attributeInput.Radius
+                };
+
+                await db.UpdateAsync(pointAttribute);
+
+                // searching for the collisions
+                var collisonParameters = new
+                {
+                    id_attribute = new DataParameter { Value = attributeId },
+                    lon = new DataParameter { Value = attributeInput.Location.Longitude },
+                    lat = new DataParameter { Value = attributeInput.Location.Latitude },
+                    radius = new DataParameter { Value = attributeInput.Radius }
+                };
+
+                var collisions = await db.QueryToListAsync<WaysAttributes>(@"select id as id_way, @id_attribute as id_attribute, 
+                                                        St_length(ST_Intersection(ST_Buffer(St_Point(@lon, @lat)::geography, @radius), the_geom::geography)) / St_length(the_geom::geography) as coverage 
+                                                        from ways where st_DWithin(the_geom, St_Point(@lon, @lat)::geography, @radius)", collisonParameters);
+                db.BulkCopy(collisions);
+
+                // calculating new weights of the edges
+                var edgesParameters = new
+                {
+                    category = new DataParameter { Value = attributeInput.CategoryId },
+                    id_attribute = new DataParameter { Value = attributeId }
+                };
+
+                await db.ExecuteAsync(@"update ways set cost = cost * (1 - coverage + coeff * coverage), 
+                                                        reverse_cost = reverse_cost * (1 - coverage + coeff * coverage),
+                                                        maxspeed_forward = maxspeed_forward / (1 - coverage + coeff * coverage), 
+                                                        maxspeed_backward = maxspeed_backward / (1 - coverage + coeff * coverage) 
+                                        from (select id_way, coverage, coeff 
+                                            from (select id_way, @category as category, coverage from ways_attributes where id_attribute = @id_attribute) as t1
+                                        inner join categories on category = categories.id) as t2 where ways.id = t2.id_way", edgesParameters);
+            }
+        }
+
+        public async Task UpdateLongAttribute(int attributeId, int userId, LongAttributeInput attributeInput)
+        {
+            using (var db = new DbContext())
+            {
+                var attribute = await db.Attributes
+                        .LoadWith(a => a.Category)
+                        .FirstOrDefaultAsync(a => a.Id == attributeId);
+
+                if (await db.Categories.FirstOrDefaultAsync(c => c.Id == attributeInput.CategoryId && c.IsLong) == null)
+                {
+                    throw new BadInputException(101, "wrong category");
+                }
+
+                if (await db.Users.FirstOrDefaultAsync(u => u.Id == userId) == null)
+                {
+                    throw new BadInputException(102, "user with such id was not found");
+                }
+
+                if (attribute == null)
+                {
+                    throw new BadInputException(105, "attribute was not found");
+                }
+
+                if (attribute.UserId != userId)
+                {
+                    throw new AccessRefusedException(104, "access denied");
+                }
+
+
+                var parameters = new
+                {
+                    coefficient = new DataParameter { Value = attribute.Category.Coefficient },
+                    id_attribute = new DataParameter { Value = attributeId }
+                };
+
+                await db.ExecuteAsync(@"update ways set cost = cost / (1 - coverage + coeff * coverage),
+                                                        reverse_cost = reverse_cost / (1 - coverage + coeff * coverage),
+				                                        maxspeed_forward = maxspeed_forward * (1 - coverage + coeff * coverage),
+                                                        maxspeed_backward = maxspeed_backward * (1 - coverage + coeff * coverage)
+                                        from (select id_way, coverage, @coefficient as coeff 
+		                                      from (select id_way, coverage from ways_attributes where id_attribute = @id_attribute) as t1) as t2
+                                        where ways.id = t2.id_way", parameters);
+
+                await db.WaysAttributes.Where(w => w.AttributeId == attributeId).DeleteAsync();
+
+                // inserting attribute into database
+                attribute.Commentary = attributeInput.Commentary;
+                attribute.CategoryId = attributeInput.CategoryId;
+
+                await db.UpdateAsync(attribute);
+
+                List<int> closestPointsID = (await FindClosestNodes(attributeInput.Points)).ToList();
+                List<int> affectedEdges = new List<int>();
+
+                for (int i = 0; i < (closestPointsID.Count - 1); i++)
+                {
+                    var pointsParameters = new
+                    {
+                        source = new DataParameter { Value = closestPointsID[i] },
+                        target = new DataParameter { Value = closestPointsID[i + 1] }
+                    };
+                    var edges = await db.QueryToListAsync<int>(
+                                      @"SELECT id
+                                      FROM pgr_bdDijkstra('SELECT id, source, target, cost, reverse_cost
+                                                          FROM ways_backup', @source, @target) 
+                                      inner join ways_backup on edge = ways_backup.id",
+                                      pointsParameters);
+
+                    affectedEdges.AddRange(edges);
+                }
+
+                var collisions = affectedEdges
+                                .Select(edgeId =>
+                                new WaysAttributes
+                                {
+                                    AttributeId = attributeId,
+                                    WayId = edgeId,
+                                    Coverage = 1
+                                });
+
+                db.BulkCopy(collisions);
+
+                var edgesParameters = new
+                {
+                    category = new DataParameter { Value = attributeInput.CategoryId },
+                    id_attribute = new DataParameter { Value = attributeId }
+                };
+
+                await db.ExecuteAsync(@"update ways set cost = cost * coeff, 
+                                                        reverse_cost = reverse_cost * coeff,
+                                                        maxspeed_forward = maxspeed_forward / coeff,
+                                                        maxspeed_backward = maxspeed_backward / coeff
+                                        from (select id_way, coverage, coeff 
+                                              from (select id_way, @category as category, coverage 
+                                                    from ways_attributes where id_attribute = @id_attribute) as t1
+                                        inner join categories on category = categories.id) as t2 where ways.id = t2.id_way", edgesParameters);
+            }
+        }
+
         public async Task<IEnumerable<Category>> GetCategories()
         {
             using (var db = new DbContext())
@@ -200,7 +393,7 @@ namespace GeoRouting.AppLayer.Services
 
                 foreach (var attr in longAttributes)
                 {
-                    attr.Points = await db.WaysAttributes
+                    attr.Edges = await db.WaysAttributes
                                     .LoadWith(wa => wa.Way)
                                     .Where(wa => wa.AttributeId == attr.Id)
                                     .Select(wa => new LongEdgeDTO
@@ -291,5 +484,6 @@ namespace GeoRouting.AppLayer.Services
 
             return closestNodes;
         }
+
     }
 }

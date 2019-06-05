@@ -9,5 +9,6 @@ namespace GeoRouting.AppLayer.Services
     public interface IRoutingService
     {
         Task<IEnumerable<EdgeDTO>> CalculateRouteAsync(CalculateRouteInput routeInput);
+        Task AddRoute(List<RoutePointsInput> route);
     }
 }

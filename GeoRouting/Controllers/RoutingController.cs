@@ -48,5 +48,15 @@ namespace GeoRouting.Controllers
             
             return Ok(edges);
         }
+
+        
+        /// <summary> kudasov pidaras </summary>
+        /// <param name="route"></param>
+        [HttpPost("route")]
+        public async Task<IActionResult> AddRoute([FromBody] List<RoutePointsInput> route)
+        {
+            await routingService.AddRoute(route);
+            return Ok();
+        }
     }
 }

@@ -14,6 +14,7 @@ namespace GeoRouting.AppLayer
             CreateMap<SignUpInput, User>();
             CreateMap<PointAttributeInput, Model.Entities.Attribute>();
             CreateMap<LongAttributeInput, Model.Entities.Attribute>();
+            CreateMap<Way, WayBackUp>();
         }
     }
 }

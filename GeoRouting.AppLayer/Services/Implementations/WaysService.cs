@@ -38,7 +38,7 @@ namespace GeoRouting.AppLayer.Services
 
                 var longAttributes = await db.WaysAttributes
                                              .LoadWith(wa => wa.Attribute)
-                                             .Where(wa => wa.WayId == wayId)
+                                             .Where(wa => wa.WayId == wayId && !wa.Attribute.IsPoint)
                                              .Select(wa => new LongAttrbiuteDTO
                                              {
                                                  Id = wa.Attribute.Id,
@@ -50,7 +50,7 @@ namespace GeoRouting.AppLayer.Services
 
                 foreach (var attr in longAttributes)
                 {
-                    attr.Points = await db.WaysAttributes
+                    attr.Edges = await db.WaysAttributes
                                     .LoadWith(wa => wa.Way)
                                     .Where(wa => wa.AttributeId == attr.Id)
                                     .Select(wa => new LongEdgeDTO
